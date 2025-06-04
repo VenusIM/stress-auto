@@ -1,0 +1,577 @@
+<!-- detail.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>그룹 상세 - Stress Scenario Runner</title>
+    <style>
+
+        body, h1, div, button, ul, li {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background: #173529;
+            color: #e0f2e9;
+        }
+
+        .header {
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            height: 74px;
+            background: linear-gradient(to bottom, #ffffff 0%, #e7e7e7 100%)
+        }
+        .header .logo {
+            display: flex;
+            align-items: center;
+            margin-left: 215px;
+        }
+        .header .logo img {
+            height: 32px;
+            margin-right: 8px;
+        }
+
+        .header .title {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .header .back-btn-header {
+            color: #2c3e50;
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 20px;
+        }
+
+        .main {
+            padding: 40px 20px;
+        }
+
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 800px;
+            margin: 0 auto 20px;
+        }
+
+        .main-header h1 {
+            color: #cef0da;
+            font-size: 2.2em;
+            margin: 0;
+        }
+
+        .file-count {
+            color: #a8e1c1;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .gitlab {
+            vertical-align: middle;
+            width: 30px;
+            height: 30px;
+            margin-right: -3px;
+            margin-left: -3px;
+        }
+
+        .file-count img.gitlab-icon {
+            width: 24px;
+            height: 24px;
+            vertical-align: middle;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .file-count img.gitlab-icon:hover {
+            opacity: 0.8;
+        }
+
+        ul#file-list {
+            max-width: 800px;
+            margin: 0 auto;
+            list-style: none;
+        }
+
+        .file-item {
+            background: #1e4637;
+            border-radius: 8px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+            margin-bottom: 12px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .file-item.active {
+            background: #245a44;
+        }
+
+        .file-item.active::before {
+            content: '';
+            position: absolute;
+            left: 16px;
+            top: 52%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: #e74c3c;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .file-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #cef0da;
+            padding-left: 20px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 0px 9px;
+            font-size: 0.95em;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover:not(:disabled) {
+            opacity: 0.9;
+        }
+
+        .gitlab-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #d3efe2;
+            color: #173529;
+            font-weight: 600;
+            padding: 4px 10px;
+        }
+
+        .run-btn {
+            background: #3498db;
+        }
+
+        .run-btn:disabled {
+            background: #57606f;
+            cursor: not-allowed;
+        }
+
+        .stop-btn {
+            background: #e74c3c;
+        }
+
+        .move-btn {
+            background: #27ae60;
+        }
+
+        .git-source {
+            margin: 0 -6px;
+            margin-bottom: -1px;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 6px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #cef0da;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.2em;
+            z-index: 999;
+            flex-direction: column;
+        }
+
+        .layout {
+            position: relative;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 150px;
+            top: 150px;
+            width: 350px;
+            background: #1a3c2e;
+            color: #cef0da;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            height: fit-content;
+            z-index: 10;
+        }
+
+        .main-content {
+            max-width: 1200px;
+            width: 1200px;
+            flex: none;
+        }
+
+        .sidebar h3 {
+            font-size: 1.4em;
+            margin-bottom: 18px;
+            border-bottom: 1px solid #5aa9b8;
+            padding-bottom: 8px;
+            color: #6bc1c7;
+        }
+
+        .sidebar-guide {
+            list-style: none;
+            padding-left: 0;
+            font-size: 1em;
+            line-height: 1.5em;
+        }
+
+        .sidebar-guide li {
+            margin-bottom: 16px;
+            color: #cbe9e8;
+        }
+
+        .sidebar-guide li strong {
+            font-weight: 700;
+            font-size: 1.1em;
+            display: block;
+            margin-bottom: 4px;
+            color: #5aa9b8;
+        }
+
+        .sidebar-guide .icon {
+            font-size: 12px;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+
+
+        @media (max-width: 768px) {
+            .layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: static;
+                margin-bottom: 20px;
+            }
+
+            .main-content {
+                max-width: 100%;
+            }
+        }
+
+         .modal-overlay {
+             position: fixed;
+             top: 0; left: 0; right: 0; bottom: 0;
+             background: rgba(0, 0, 0, 0.5);
+             display: flex;
+             justify-content: center;
+             align-items: center;
+             z-index: 1000;
+         }
+
+        .modal {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 1000px;
+            max-width: 90%;
+            height: 60vh;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            padding: 24px;
+            position: relative;
+        }
+
+        .modal-content {
+            color: black;
+            overflow-y: scroll;
+            margin-top: 2%;
+            max-height: 85%;
+        }
+
+        .modal-content h2 {
+            position: absolute;
+            top: 0;
+        }
+
+        #modal-contents {
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+
+        .modal-button {
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            background-color: #3498db;
+            color: #fff;
+            padding: 10px 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .modal-button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+<!-- Header -->
+<div class="header">
+    <div class="logo" onclick="location.href='index.html';">
+        <img src="logo.png" alt="Locust Logo"/>
+        <span class="title">Runner - <span id="group-header"></span></span>
+    </div>
+    <a href="index.html" class="back-btn-header">←</a>
+</div>
+
+<div class="layout">
+    <div class="sidebar">
+        <h3>📘 사용 안내</h3>
+        <ul class="sidebar-guide">
+            <li><strong>▶ 실행</strong>작성한 <span class="highlight">시나리오</span>를 <span class="highlight">Locust</span>에 세팅합니다. <br></li>
+            <li><strong><img src="https://about.gitlab.com/images/press/logo/png/gitlab-icon-rgb.png" class="gitlab" alt="GitLab"> GitLab</strong>시나리오 <span class="highlight">소스 코드</span>를 확인합니다.</li>
+            <li><strong><span class="icon">🔴</span> 깜빡이는 점</strong>현재 <span class="highlight">실행 중</span>인 시나리오입니다.</li>
+            <li><strong><span class="icon">🛑</span> 정지</strong>현재 실행을 <span class="highlight">종료</span>합니다. <br></li>
+            <li><strong><span class="icon">🚀</span> 이동</strong><span class="highlight">부하 발생기</span>로 이동합니다.</li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="main-header">
+            <h1>그룹: <span id="group-title"></span></h1>
+            <div class="file-count" id="file-count"></div>
+        </div>
+        <ul id="file-list"></ul>
+    </div>
+
+    <div class="modal-overlay" style="display: none;" id="error-modal">
+        <div class="modal">
+            <div class="modal-content">
+                <h2>🚨 오류</h2>
+                <p id="modal-contents"></p>
+                <button class="modal-button" onclick="closeErrorModal()">확인</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="overlay">
+    <div class="spinner"></div>
+    <div id="overlay-text">Loading...</div>
+</div>
+
+
+<script>
+    const API_BASE = "https://stress-api.example.com";
+    const GROUP = new URLSearchParams(location.search).get('group');
+    document.getElementById('group-header').textContent = GROUP;
+    document.getElementById('group-title').textContent = GROUP;
+
+    function showOverlay(msg) {
+        const o = document.getElementById('overlay');
+        o.style.display = 'flex';
+        document.getElementById('overlay-text').innerText = msg
+    }
+
+    function hideOverlay() {
+        document.getElementById('overlay').style.display = 'none';
+    }
+
+    async function fetchJSON(u) {
+        const r = await fetch(u);
+        if (!r.ok) throw new Error(await r.text());
+        return r.json();
+    }
+
+    function showErrorModal(message) {
+        document.getElementById('error-modal').style.display = 'flex'
+        document.getElementById('modal-contents').innerText = message
+    }
+
+    function closeErrorModal() {
+        document.getElementById('error-modal').style.display = 'none';
+        loadFiles();
+    }
+
+    async function loadFiles() {
+        const list = document.getElementById('file-list');
+        list.innerHTML = '';
+        const fileCount = document.getElementById('file-count');
+        showOverlay('로딩 중...');
+
+        let proc = null;
+        try {
+            proc = await fetchJSON(`${API_BASE}/process`);
+        } catch {
+        }
+        const runningGrp = proc?.group || null;
+        const runningFile = proc?.file || null;
+
+        await fetch(`${API_BASE}/pull`);
+        const res = await fetchJSON(`${API_BASE}/scenario/${GROUP}/list`);
+        fileCount.innerHTML = `총 ${res.files.length}개 파일
+            <button onclick="window.open('https://github.com/VenusIM/stress-test/stress-scenario/${GROUP}', '_blank')"
+                    style="margin-left: 12px; background: none; border: 2px dashed #80cfa9; color: #80cfa9; border-radius: 6px; padding: 4px 10px; font-weight: 600; cursor: pointer;">
+                <img src="https://about.gitlab.com/images/press/logo/png/gitlab-icon-rgb.png" class="gitlab-icon" alt="GitLab" title="GitLab에서 보기"> 시나리오 추가
+            </button>`;
+        let activeElement = null;
+        res.files.forEach(file => {
+            const li = document.createElement('li');
+            const isActive = (runningGrp === GROUP && runningFile === file);
+            li.className = 'file-item' + (isActive ? ' active' : '');
+
+            const name = document.createElement('span');
+            name.className = 'file-name';
+            name.textContent = file;
+            li.appendChild(name);
+
+            const btnGroup = document.createElement('div');
+            btnGroup.className = 'btn-group';
+
+            if (!runningGrp) {
+                const run = document.createElement('button');
+                run.textContent = '실행';
+                run.className = 'btn run-btn';
+                run.onclick = async () => {
+                    run.disabled = true;
+                    showOverlay('세팅 중...');
+                    try {
+                        await fetch(`${API_BASE}/pull`);
+                        const response = await fetch(`${API_BASE}/run/${GROUP}?fileName=${file}`);
+                        if (!response.ok) {
+                            const errorData = await response.json()
+                            showErrorModal(errorData.detail)
+                            throw new Error(errorData.detail);
+                        }
+                    } catch (e) {
+                        run.disabled = false;
+                        hideOverlay();
+                        return;
+                    }
+                    loadFiles();
+                };
+                btnGroup.appendChild(run);
+            } else if (isActive) {
+                activeElement = li;
+                const stop = document.createElement('button');
+                stop.textContent = '정지';
+                stop.className = 'btn stop-btn';
+                stop.onclick = async function() {
+                    const res = await fetchJSON(`${API_BASE}/process`);
+                    if(res?.setting === "true") {
+                        alert('세팅 중 입니다. 잠시 후에 시도해 주세요.')
+                        return
+                    }
+                    stop.disabled = true;
+                    showOverlay('정지 중...');
+                    await fetch(`${API_BASE}/stop/${GROUP}`);
+                    loadFiles();
+                };
+                btnGroup.appendChild(stop);
+
+                const mv = document.createElement('button');
+                mv.textContent = '이동';
+                mv.className = 'btn move-btn';
+                mv.onclick = async function () {
+                    const res = await fetchJSON(`${API_BASE}/process`);
+                    if(res?.setting === "true") {
+                        alert('세팅 중 입니다. 잠시 후에 시도해 주세요.')
+                        return
+                    }
+                    window.open('https://stress1.example.com', '_blank');
+                }
+                btnGroup.appendChild(mv);
+            } else {
+                const run = document.createElement('button');
+                run.textContent = '실행';
+                run.className = 'btn run-btn';
+                run.disabled = true;
+                btnGroup.appendChild(run);
+            }
+
+            const git = document.createElement('button');
+            git.className = 'btn gitlab-btn';
+            git.innerHTML = `
+                <img src="https://about.gitlab.com/images/press/logo/png/gitlab-icon-rgb.png" alt="GitLab" class="git-source" style="height: 24px;">
+                <span>소스</span>`;
+            git.onclick = () => window.open(
+                `https://github.com/VenusIM/stress-test/stress-scenario/${GROUP}/${file}`,
+                '_blank'
+            );
+            btnGroup.appendChild(git);
+
+
+            li.appendChild(btnGroup);
+            list.appendChild(li);
+        });
+
+        if (activeElement) {
+            activeElement.scrollIntoView({behavior: 'smooth', block: 'center'});
+        }
+
+        hideOverlay();
+    }
+
+    loadFiles();
+</script>
+</body>
+</html>

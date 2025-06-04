@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Stress Scenario Runner</title>
+    <style>
+        body, h1, div, button {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background: #173529;
+            color: #e0f2e9;
+        }
+
+        .header {
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            height: 74px;
+            background: linear-gradient(to bottom, #ffffff 0%, #e7e7e7 100%)
+        }
+        .header .logo {
+            display: flex;
+            align-items: center;
+            margin-left: 215px;
+        }
+        .header .logo img {
+            height: 32px;
+            margin-right: 8px;
+        }
+
+        .main {
+            padding: 40px 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #cef0da;
+            margin-bottom: 40px;
+            font-weight: 700;
+            font-size: 2.4em;
+        }
+
+        .guide-box {
+            max-width: 1140px;
+            margin: 0 auto;
+            background: #244a39;
+            border-radius: 12px;
+            padding: 28px;
+            border: 2px solid #70b58f;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .guide-box h3 {
+            font-size: 1.6em;
+            margin-bottom: 20px;
+            color: #a8e1c1;
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+        }
+
+        .guide-box h3::before {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .guide-box ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .guide-box li {
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+            font-size: 1em;
+            line-height: 1.6;
+        }
+
+        .guide-box li::before {
+            margin-right: 8px;
+            color: #a8e1c1;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        #groups {
+            max-width: 1140px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px,1fr));
+            gap: 24px;
+        }
+
+        #groups.running {
+            max-width: 1140px;
+            margin: 0 auto;
+            margin-top:30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px,1fr));
+            gap: 24px;
+        }
+
+        .group-block {
+            background: #1e4637;
+            border-radius: 8px;
+            padding: 24px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 2px solid transparent;
+            height: 170px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .group-block.running {
+            border-color: #70b58f;
+            background: #245a44;
+            align-items: flex-start;
+            text-align: left;
+            justify-content: flex-start;
+        }
+
+        .group-block:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        .group-name {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #cef0da;
+            margin-bottom: 12px;
+        }
+
+        .running-info {
+            font-size: 1em;
+            font-weight: 500;
+            color: #a8e1c1;
+            margin-bottom: 16px;
+            position: relative;
+            padding-left: 20px;
+        }
+        .running-info::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 10px;
+            height: 10px;
+            background: #e74c3c;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .btn {
+            flex: 1;
+            padding: 10px 0;
+            width: 100px;
+            font-size: 0.9em;
+            font-weight: 600;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            color: white;
+        }
+        .run-btn { background: #3498db; }
+        .stop-btn { background: #e74c3c; }
+        .move-btn { background: #27ae60; }
+        .btn:disabled { background: #57606f; cursor: not-allowed; }
+
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.2em;
+            z-index: 999;
+            flex-direction: column;
+        }
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 6px solid rgba(255,255,255,0.3);
+            border-top-color: #cef0da;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* 실행 중 없음 메시지 */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 70px 20px;
+            color: #a8e1c1;
+            animation: fadeIn 0.8s ease-out;
+        }
+        .empty-state img {
+            width: 140px;
+            margin-bottom: 20px;
+            opacity: 0.85;
+        }
+        .empty-state p {
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .locust-info {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #2a7055;
+            color: white;
+            font-weight: 500;
+            border-radius: 5px;
+            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="logo">
+        <img src="logo.png" alt="Locust Logo" />
+        <span style="font-size:1.2em; font-weight:700; color:#2c3e50;">Runner</span>
+    </div>
+</div>
+
+<div id="overlay">
+    <div class="spinner"></div>
+    <div id="overlay-text">Loading...</div>
+</div>
+
+<div class="main">
+    <div class="guide-box">
+        <ul>
+            <li>
+                <div>
+                    <div class="li-title">📁 그룹 선택</div>
+                    <div class="li-desc">그룹을 추가하고 싶다면, + 카드를 클릭하여 GitLab 경로에 디렉터리를 생성하면 자동 추가 되어요!</div>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <div class="li-title">📝 시나리오 작성</div>
+                    <div class="li-desc">생성한 Gitlab 디렉터리 안에 시나리오 파일을 추가/수정하면 자동 반영 되어요!</div>
+                </div>
+            </li>
+        </ul>
+        <div style="margin-top: 20px; text-align: left;">
+            <a href=""
+               class="locust-info"
+               target="_blank"
+               rel="noopener noreferrer"
+               onmouseover="this.style.backgroundColor='#333'"
+               onmouseout="this.style.backgroundColor='#2a7055'">
+                📄 로커스트 사용법 보기
+            </a>
+        </div>
+    </div>
+
+    <div id="groups"></div>
+</div>
+
+
+<script>
+    const API_BASE = "https://stress-api.example.com";
+    async function fetchJSON(url) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(await res.text());
+        return res.json();
+    }
+
+    async function refreshUI() {
+        const container = document.getElementById('groups');
+        container.innerHTML = '';
+        document.getElementById('overlay').style.display = 'flex';
+
+        try {
+            await fetch(`${API_BASE}/pull`);
+            const [groupRes, procRes] = await Promise.all([
+                fetchJSON(`${API_BASE}/scenario/list`),
+                fetchJSON(`${API_BASE}/process`).catch(() => null)
+            ]);
+            const groups = groupRes.group || [];
+            const runningGroup = procRes?.group;
+            const runningFile = procRes?.file;
+
+            if (!runningGroup) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'empty-state';
+                emptyDiv.innerHTML = `<p>아래 그룹을 선택하고,<br> 시나리오 파일을 실행하여 세팅해 주세요 🚀</p>`;
+                container.appendChild(emptyDiv);
+            }
+
+            // 실행 중인 그룹을 가장 앞으로 배치하기
+            let orderedGroups = groups;
+            if (runningGroup) {
+                orderedGroups = groups.filter(g => g !== runningGroup);
+                orderedGroups.unshift(runningGroup);
+            }
+
+            orderedGroups.forEach(group => {
+                const card = document.createElement('div');
+                card.className = 'group-block';
+                if (group === runningGroup) {
+                    card.classList.add('running');
+                    container.classList.add('running');
+                }
+
+                const name = document.createElement('div');
+                name.className = 'group-name';
+                name.textContent = group;
+                card.appendChild(name);
+
+                if (group === runningGroup && runningFile) {
+                    const info = document.createElement('div');
+                    info.className = 'running-info';
+                    info.textContent = `Running ${runningFile}`;
+                    card.appendChild(info);
+
+                    const btnGroup = document.createElement('div');
+                    btnGroup.className = 'btn-group';
+
+                    const stopBtn = document.createElement('button');
+                    stopBtn.className = 'btn stop-btn';
+                    stopBtn.textContent = '정지';
+                    stopBtn.onclick = async e => {
+                        e.stopPropagation();
+                        const res = await fetchJSON(`${API_BASE}/process`);
+                        if(res?.setting === "true") {
+                            alert('세팅 중 입니다. 잠시 후에 시도해 주세요.');
+                            return;
+                        }
+                        stopBtn.disabled = true;
+                        await fetch(`${API_BASE}/stop/${group}`);
+                        refreshUI();
+                    };
+                    btnGroup.appendChild(stopBtn);
+
+                    const moveBtn = document.createElement('button');
+                    moveBtn.className = 'btn move-btn';
+                    moveBtn.textContent = '이동';
+                    moveBtn.onclick = async function(e) {
+                        e.stopPropagation();
+                        const res = await fetchJSON(`${API_BASE}/process`);
+                        if(res?.setting === "true") {
+                            alert('세팅 중 입니다. 잠시 후에 시도해 주세요.');
+                            return;
+                        }
+                        window.open('https://stress1.example.com','_blank');
+                    };
+                    btnGroup.appendChild(moveBtn);
+
+                    card.appendChild(btnGroup);
+                }
+
+                card.onclick = () => location.href = `detail.html?group=${encodeURIComponent(group)}`;
+                container.appendChild(card);
+            });
+
+            // 추가 카드
+            const addCard = document.createElement('div');
+            addCard.className = 'group-block';
+            addCard.style.alignItems = 'center';
+            addCard.style.color = '#a8e1c1';
+            addCard.style.fontWeight = '600';
+            addCard.style.fontSize = '1.2em';
+            addCard.style.border = '3px dashed #a0a0a0';
+            addCard.innerHTML = `<div style="font-size: 2.5em; margin-bottom: 10px;">＋</div>`;
+            addCard.onclick = () => {
+                window.open("https://github.com/VenusIM/stress/stress-scenario/");
+            };
+            container.appendChild(addCard);
+
+        } catch (e) {
+            console.error(e);
+        } finally {
+            document.getElementById('overlay').style.display = 'none';
+        }
+    }
+
+    refreshUI();
+    setInterval(refreshUI, 300000);
+</script>
+</body>
+</html>
