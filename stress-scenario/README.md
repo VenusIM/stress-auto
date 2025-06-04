@@ -1,8 +1,3 @@
-
-이동을 눌러 세팅된 부하 발생기 (Locust) UI로 이동합니다.
-<br>
-https://stress1.example.com/
-
 <br>
 
 ## UI 구성 및 주요 기능
